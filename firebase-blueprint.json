@@ -1,0 +1,164 @@
+{
+  "entities": {
+    "Tenant": {
+      "title": "Tenant",
+      "description": "Represents a company or organization using the platform.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the company."
+        },
+        "databaseId": {
+          "type": "string",
+          "description": "The specific Firestore database ID for this tenant."
+        },
+        "logoUrl": {
+          "type": "string",
+          "description": "The URL of the company logo."
+        },
+        "ownerUid": {
+          "type": "string",
+          "description": "The UID of the user who created this tenant."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["name", "databaseId", "ownerUid"]
+    },
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Stores user-specific information and preferences.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The user's full name."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "The user's email address."
+        },
+        "photo_file_name": {
+          "type": "string",
+          "description": "The URL or file name of the user's profile photo."
+        }
+      },
+      "required": ["name", "email"]
+    },
+    "Risk": {
+      "title": "Risk",
+      "description": "Represents a single risk assessment entry based on ISO 31000.",
+      "type": "object",
+      "properties": {
+        "risk_id": {
+          "type": "string",
+          "description": "A unique identifier for the risk (e.g., R-001)."
+        },
+        "asset_category": {
+          "type": "string",
+          "description": "The category of the asset at risk."
+        },
+        "asset": {
+          "type": "string",
+          "description": "The specific asset at risk."
+        },
+        "threat": {
+          "type": "string",
+          "description": "The potential threat to the asset."
+        },
+        "vulnerability": {
+          "type": "string",
+          "description": "The vulnerability being exploited."
+        },
+        "risk_statement": {
+          "type": "string",
+          "description": "A detailed statement describing the risk."
+        },
+        "likelihood_score": {
+          "type": "integer",
+          "description": "Likelihood score (1-5)."
+        },
+        "impact_score": {
+          "type": "integer",
+          "description": "Impact score (1-5)."
+        },
+        "control_effectiveness": {
+          "type": "string",
+          "enum": ["weak", "medium", "strong"],
+          "description": "Effectiveness of existing controls."
+        },
+        "existing_controls": {
+          "type": "string",
+          "description": "Description of existing controls."
+        },
+        "treatment_option": {
+          "type": "string",
+          "enum": ["Avoid", "Mitigate", "Transfer", "Accept"],
+          "description": "The chosen risk treatment strategy."
+        },
+        "treatment_details": {
+          "type": "string",
+          "description": "Specific details about the treatment plan."
+        },
+        "action_owner": {
+          "type": "string",
+          "description": "The person responsible for the risk action."
+        },
+        "timeline": {
+          "type": "string",
+          "description": "The due date for the risk action."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Open", "In-progress", "Closed"],
+          "description": "The current status of the risk."
+        },
+        "mitigation_actions": {
+          "type": "string",
+          "description": "Planned mitigation actions."
+        },
+        "inherent_risk": {
+          "type": "integer",
+          "description": "Calculated inherent risk score."
+        },
+        "residual_risk": {
+          "type": "integer",
+          "description": "Calculated residual risk score."
+        },
+        "risk_level": {
+          "type": "string",
+          "enum": ["Low", "Medium", "High", "Extreme"],
+          "description": "The risk level based on the residual risk score."
+        },
+        "uid": {
+          "type": "string",
+          "description": "The UID of the user who owns this risk entry."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the risk was created."
+        }
+      },
+      "required": ["risk_id", "asset", "threat", "likelihood_score", "impact_score", "uid"]
+    }
+  },
+  "firestore": {
+    "/tenants/{tenantId}": {
+      "schema": "Tenant",
+      "description": "Tenant metadata stored in the master database."
+    },
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile documents (stored in tenant database)."
+    },
+    "/risks/{riskId}": {
+      "schema": "Risk",
+      "description": "Risk assessment entries (stored in tenant database)."
+    }
+  }
+}

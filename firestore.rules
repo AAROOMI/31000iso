@@ -1,0 +1,153 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: tenants
+    // Document ID: {tenantId}
+    // Fields:
+    //   - name: string (required)
+    //   - databaseId: string (required)
+    //   - ownerUid: string (required)
+    //
+    // Collection: risks
+    // Document ID: {riskId}
+    // Fields:
+    //   - id: string (required)
+    //   ... (same as before)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isTenantOwner(tenantId) {
+      return isAuthenticated() && get(/databases/$(database)/documents/tenants/$(tenantId)).data.ownerUid == request.auth.uid;
+    }
+
+    function isAdmin() {
+      let email = ('email' in request.auth.token && request.auth.token.email != null) ? request.auth.token.email.lower() : "";
+      let isSystemAdmin = (email == "aaroomi@gmail.com" || email == "admin@metaworks.com");
+      
+      let userDocRef = /databases/$(database)/documents/users/$(request.auth.uid);
+      let isRoleAdmin = exists(userDocRef) && get(userDocRef).data.role == 'admin';
+      
+      return isAuthenticated() && (isSystemAdmin || isRoleAdmin);
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidTenant(data) {
+      return hasRequiredFields(['name', 'databaseId', 'ownerUid']) &&
+             data.name is string && data.name.size() > 0 &&
+             data.databaseId is string &&
+             data.ownerUid == request.auth.uid;
+    }
+
+    function isValidUser(data) {
+      return hasRequiredFields(['name', 'email']) &&
+             hasOnlyAllowedFields(['name', 'email', 'photo_file_name', 'role', 'lastContext', 'updatedAt', 'tenantId']) &&
+             data.name is string && data.name.size() >= 0 && data.name.size() < 100 &&
+             isValidEmail(data.email) &&
+             (!('photo_file_name' in data) || (data.photo_file_name is string && data.photo_file_name.size() < 1000)) &&
+             (!('lastContext' in data) || data.lastContext is map);
+    }
+
+    function isValidRisk(data) {
+      // Allow both camelCase (from addOrUpdateRisk) and snake_case (from saveToCloud)
+      return (hasRequiredFields(['id', 'asset', 'threat', 'likelihood', 'impact']) || 
+              hasRequiredFields(['risk_id', 'asset', 'threat', 'likelihood_score', 'impact_score'])) &&
+             hasOnlyAllowedFields([
+               // camelCase fields
+               'id', 'asset', 'asset_ar', 'threat', 'threat_ar', 'vulnerability', 'vulnerability_ar',
+               'riskStatement', 'riskStatement_ar', 'likelihood', 'impact', 'score', 'level',
+               'existingControls', 'existingControls_ar', 'treatmentOption', 'treatmentPlan',
+               'treatmentPlan_ar', 'owner', 'dueDate', 'status', 'residualLikelihood',
+               'residualImpact', 'residualScore', 'residualLevel', 'aiMitigation',
+               'aiMitigation_ar', 'createdAt', 'updatedAt',
+               // snake_case fields
+               'risk_id', 'asset_category', 'likelihood_score', 'impact_score', 'risk_statement',
+               'risk_statement_ar', 'inherent_risk', 'risk_level', 'existing_controls',
+               'existing_controls_ar', 'treatment_option', 'treatment_details',
+               'treatment_details_ar', 'action_owner', 'timeline', 'residual_likelihood',
+               'residual_impact', 'residual_risk', 'mitigation_actions', 'uid',
+               // Advanced Strategic Logic
+               'spretzel', 'rca', 'swot', 'compliance', 'stakeholders'
+             ]) &&
+             // Basic type checks for common fields
+             (!('id' in data) || data.id is string) &&
+             (!('risk_id' in data) || data.risk_id is string) &&
+             (!('asset' in data) || data.asset is string) &&
+             (!('threat' in data) || data.threat is string) &&
+             (!('likelihood' in data) || data.likelihood is number) &&
+             (!('likelihood_score' in data) || data.likelihood_score is number) &&
+             (!('impact' in data) || data.impact is number) &&
+             (!('impact_score' in data) || data.impact_score is number);
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /tenants/{tenantId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidTenant(request.resource.data);
+      allow update: if isTenantOwner(tenantId) || isAdmin();
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) && 
+                    (!('role' in request.resource.data) || request.resource.data.role == resource.data.role || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    match /risks/{riskId} {
+      allow read: if isAuthenticated(); // In tenant DB, all auth users of that tenant can read
+      allow create: if isAuthenticated() && isValidRisk(request.resource.data);
+      allow update: if isAuthenticated() && isValidRisk(request.resource.data);
+      allow delete: if isAuthenticated();
+    }
+
+    match /test/connection {
+      allow read: if true;
+    }
+
+    match /licenses/{licenseId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

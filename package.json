@@ -1,0 +1,61 @@
+{
+  "name": "iso31000",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "main": "electron.js",
+  "scripts": {
+    "dev": "tsx server.ts",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "tsx server.ts",
+    "desktop": "concurrently \"npm run dev\" \"wait-on http://localhost:3000 && electron .\"",
+    "build:desktop": "npm run build && electron-builder",
+    "lint": "tsc --noEmit"
+  },
+  "build": {
+    "appId": "com.riskguard.iso31000",
+    "productName": "RiskGuard ISO 31000",
+    "directories": {
+      "output": "dist-desktop"
+    },
+    "files": [
+      "dist/**/*",
+      "electron.js",
+      "package.json",
+      "firebase-applet-config.json"
+    ],
+    "win": {
+      "target": "nsis"
+    }
+  },
+  "dependencies": {
+    "@google/genai": "^1.30.0",
+    "@tailwindcss/vite": "^4.2.2",
+    "docx": "7.8.2",
+    "express": "^5.2.1",
+    "file-saver": "2.0.5",
+    "firebase": "^12.6.0",
+    "framer-motion": "^12.38.0",
+    "html2canvas": "^1.4.1",
+    "jspdf": "2.5.1",
+    "jspdf-autotable": "3.5.31",
+    "lucide-react": "^1.7.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-markdown": "^10.1.0",
+    "recharts": "^3.8.1",
+    "tailwindcss": "^4.2.2",
+    "tsx": "^4.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "concurrently": "^9.2.1",
+    "electron": "^41.1.0",
+    "electron-builder": "^24.13.3",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.0",
+    "wait-on": "^9.0.4"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "description": "A comprehensive ISO 31000 Risk Assessment tool with AI guidance, Firebase backend, and document export capabilities.",
+  "requestFramePermissions": [
+    "microphone",
+    "camera"
+  ],
+  "name": "RiskGuard ISO 31000"
+}
