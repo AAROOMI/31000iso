@@ -1129,31 +1129,31 @@ const App: React.FC = () => {
         const data = doc.data();
         risks.push({
           id: data.risk_id || doc.id,
-          asset: data.asset,
+          asset: data.asset || data.asset_category || "",
           asset_ar: data.asset_ar || "",
-          threat: data.threat,
+          threat: data.threat || data.threat_text || "",
           threat_ar: data.threat_ar || "",
-          vulnerability: data.vulnerability,
+          vulnerability: data.vulnerability || "",
           vulnerability_ar: data.vulnerability_ar || "",
-          riskStatement: data.risk_statement,
-          riskStatement_ar: data.risk_statement_ar || "",
-          likelihood: data.likelihood_score,
-          impact: data.impact_score,
-          score: data.inherent_risk,
-          level: data.risk_level,
-          existingControls: data.existing_controls,
-          existingControls_ar: data.existing_controls_ar || "",
-          treatmentOption: data.treatment_option,
-          treatmentPlan: data.treatment_details,
-          treatmentPlan_ar: data.treatment_details_ar || "",
-          owner: data.action_owner,
-          dueDate: data.timeline,
-          status: data.status,
-          residualLikelihood: data.residual_likelihood || data.likelihood_score,
-          residualImpact: data.residual_impact || data.impact_score,
-          residualScore: data.residual_risk,
-          residualLevel: getRiskLevel(data.residual_risk),
-          aiMitigation: data.mitigation_actions || "",
+          riskStatement: data.riskStatement || data.risk_statement || "",
+          riskStatement_ar: data.riskStatement_ar || data.risk_statement_ar || "",
+          likelihood: Number(data.likelihood || data.likelihood_score || 3),
+          impact: Number(data.impact || data.impact_score || 3),
+          score: Number(data.score || data.inherent_risk || 9),
+          level: data.level || data.risk_level || "Medium",
+          existingControls: data.existingControls || data.existing_controls || "",
+          existingControls_ar: data.existingControls_ar || data.existing_controls_ar || "",
+          treatmentOption: data.treatmentOption || data.treatment_option || "Mitigate",
+          treatmentPlan: data.treatmentPlan || data.treatment_details || data.mitigation_actions || "",
+          treatmentPlan_ar: data.treatmentPlan_ar || data.treatment_details_ar || "",
+          owner: data.owner || data.action_owner || "",
+          dueDate: data.dueDate || data.timeline || "",
+          status: data.status || "Open",
+          residualLikelihood: Number(data.residualLikelihood || data.residual_likelihood || 2),
+          residualImpact: Number(data.residualImpact || data.residual_impact || 2),
+          residualScore: Number(data.residualScore || data.residual_risk || 4),
+          residualLevel: data.residualLevel || data.residual_risk_level || "Low",
+          aiMitigation: data.aiMitigation || data.mitigation_actions || "",
           rca: data.rca || null,
           swot: data.swot || null,
           spretzel: data.spretzel || null,
@@ -2058,6 +2058,8 @@ const App: React.FC = () => {
       const result = await model.generateContent(prompt);
       const response = await result.response;
       let text = response.text();
+      // Clean up markdown block if present so regex doesn't match the closing ``` as part of string
+      text = text.replace(/```json\n?/i, "").replace(/```/g, "").trim();
       
       // Powerful JSON extraction logic to handle LLM conversational noise
       const jsonMatch = text.match(/\{[\s\S]*\}/);
