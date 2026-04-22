@@ -20,15 +20,15 @@ export const SPRETZELRadial: React.FC<SPRETZELProps> = ({ data, lang = 'en' }) =
   const isAr = lang === 'ar';
   
   const chartData = [
-    { subject: isAr ? 'الأشخاص' : 'People', value: data.people ? 100 : 20, fullMark: 100 },
-    { subject: isAr ? 'الموارد' : 'Resources', value: data.resources ? 100 : 20, fullMark: 100 },
-    { subject: isAr ? 'القانون' : 'Legal', value: data.legal ? 100 : 20, fullMark: 100 },
-    { subject: isAr ? 'الفرص' : 'Opportunity', value: data.opportunities ? 100 : 20, fullMark: 100 },
-    { subject: isAr ? 'التقنية' : 'Tech', value: data.technology ? 100 : 20, fullMark: 100 },
-    { subject: isAr ? 'الاستراتيجية' : 'Strategy', value: data.strategy ? 100 : 20, fullMark: 100 },
-    { subject: isAr ? 'المشاركة' : 'Engage', value: data.engagement ? 100 : 20, fullMark: 100 },
-    { subject: isAr ? 'دورة الحياة' : 'Lifecycle', value: data.lifecycle ? 100 : 20, fullMark: 100 },
-    { subject: isAr ? 'التسويق' : 'Market', value: data.marketing ? 100 : 20, fullMark: 100 },
+    { subject: isAr ? 'الأشخاص' : 'People', value: data.people ? 100 : 0, fullMark: 100 },
+    { subject: isAr ? 'الموارد' : 'Resources', value: data.resources ? 100 : 0, fullMark: 100 },
+    { subject: isAr ? 'القانون' : 'Legal', value: data.legal ? 100 : 0, fullMark: 100 },
+    { subject: isAr ? 'الفرص' : 'Opportunity', value: data.opportunities ? 100 : 0, fullMark: 100 },
+    { subject: isAr ? 'التقنية' : 'Tech', value: data.technology ? 100 : 0, fullMark: 100 },
+    { subject: isAr ? 'الاستراتيجية' : 'Strategy', value: data.strategy ? 100 : 0, fullMark: 100 },
+    { subject: isAr ? 'المشاركة' : 'Engage', value: data.engagement ? 100 : 0, fullMark: 100 },
+    { subject: isAr ? 'دورة الحياة' : 'Lifecycle', value: data.lifecycle ? 100 : 0, fullMark: 100 },
+    { subject: isAr ? 'التسويق' : 'Market', value: data.marketing ? 100 : 0, fullMark: 100 },
   ];
 
   return (

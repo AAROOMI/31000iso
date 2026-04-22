@@ -907,12 +907,33 @@ const App: React.FC = () => {
       residual_impact: risk.residualImpact || risk.impact || 2,
       residual_risk: risk.residualScore || 4,
       mitigation_actions: risk.aiMitigation || "",
-      spretzel: risk.spretzel || null,
-      stakeholders: risk.stakeholders || null,
-      rca: risk.rca || null,
-      swot: risk.swot || null,
-      enhancedDescription: risk.enhancedDescription || null,
-      kri: risk.kri || null,
+      spretzel: risk.spretzel || { people: "", resources: "", legal: "", opportunities: "", technology: "", strategy: "", engagement: "", lifecycle: "", marketing: "" },
+      stakeholders: risk.stakeholders || { internal: "", external: "", influence: 'Medium', interest: 'Medium' },
+      rca: risk.rca || { fiveWhys: ["", "", "", "", ""], ishikawa: { people: "", process: "", technology: "", environment: "", management: "" }, primaryRootCause: "", aiConfidence: 0.85, explanation: "" },
+      swot: risk.swot || { strengths: "", weaknesses: "", opportunities: "", threats: "", strategicActions: [] },
+      enhancedDescription: risk.enhancedDescription || { riskStatement: risk.riskStatement || "", context: "", impactDescription: "", likelihoodReasoning: "", aiSuggestions: "" },
+      kri: risk.kri || { indicator: "", threshold: 0, currentValue: 0, trend: 'stable', alertLevel: 'Normal', history: [] },
+      
+      // Strict architectural definitions requested by enterprise standards:
+      assessmentContext: {
+        organization: context.organization || "",
+        scope: context.scope || "",
+        frameworks: context.frameworks || "",
+        riskAppetite: context.riskAppetite || "Moderate"
+      },
+      coreAnalysis: {
+        asset: risk.asset || "",
+        threat: risk.threat || "",
+        vulnerability: risk.vulnerability || "",
+        likelihood: risk.likelihood || 3,
+        impact: risk.impact || 3,
+        score: risk.score || 9,
+        level: risk.level || "Medium",
+        status: risk.status || "Open"
+      },
+      rootCause: risk.rca || { fiveWhys: ["", "", "", "", ""], ishikawa: { people: "", process: "", technology: "", environment: "", management: "" }, primaryRootCause: "", aiConfidence: 0.85, explanation: "" },
+      workflow: { plan: risk.treatmentPlan || "", owner: risk.owner || "", dueDate: risk.dueDate || "" },
+
       uid: user?.uid,
       updatedAt: new Date().toISOString()
     };
@@ -1993,8 +2014,9 @@ const App: React.FC = () => {
     }
   };
 
-  const generateAdvancedInsights = async () => {
-    if (!formData.asset || !formData.threat) {
+  const generateAdvancedInsights = async (targetData?: any) => {
+    const dataToAnalyse = targetData || formData;
+    if (!dataToAnalyse.asset || !dataToAnalyse.threat) {
       alert("Please provide Asset and Threat details first.");
       return;
     }
@@ -2007,10 +2029,10 @@ const App: React.FC = () => {
         Operating Language: ${lang === 'ar' ? 'Arabic (العربية)' : 'English'}
         ${lang === 'ar' ? 'IMPORTANT: All descriptive text values MUST be in Arabic.' : ''}
         
-        Asset: ${lang === 'ar' && formData.asset_ar ? formData.asset_ar : formData.asset}
-        Threat: ${lang === 'ar' && formData.threat_ar ? formData.threat_ar : formData.threat}
-        Vulnerability: ${lang === 'ar' && formData.vulnerability_ar ? formData.vulnerability_ar : formData.vulnerability}
-        Statement: ${lang === 'ar' && formData.riskStatement_ar ? formData.riskStatement_ar : formData.riskStatement}
+        Asset: ${lang === 'ar' && dataToAnalyse.asset_ar ? dataToAnalyse.asset_ar : dataToAnalyse.asset}
+        Threat: ${lang === 'ar' && dataToAnalyse.threat_ar ? dataToAnalyse.threat_ar : dataToAnalyse.threat}
+        Vulnerability: ${lang === 'ar' && dataToAnalyse.vulnerability_ar ? dataToAnalyse.vulnerability_ar : dataToAnalyse.vulnerability}
+        Statement: ${lang === 'ar' && dataToAnalyse.riskStatement_ar ? dataToAnalyse.riskStatement_ar : dataToAnalyse.riskStatement}
         Context: ${context.organization} | Scope: ${context.scope}
 
         Return a JSON object with the following fields (provide realistic, high-quality data):
@@ -4058,19 +4080,42 @@ const App: React.FC = () => {
                      <FiveWhysFlow data={formData.rca?.fiveWhys || []} lang={lang} />
                    </>
                  ) : (
-                   <div className="h-full flex flex-col items-center justify-center p-12 bg-slate-900/30 border border-slate-800 border-dashed rounded-3xl text-center space-y-4">
-                     <div className="p-4 bg-purple-500/10 rounded-full text-purple-400">
-                       <Zap size={32} />
-                     </div>
-                     <h3 className="text-sm font-bold text-slate-300">{t.intelligenceSelectRisk}</h3>
-                     <p className="text-xs text-slate-500 max-w-xs">{t.intelligenceSelectDesc}</p>
-                     <button 
-                       onClick={() => setActiveTab('history')}
-                       className="px-6 py-2 bg-purple-500 text-slate-950 font-bold rounded-lg text-[10px] uppercase tracking-widest hover:bg-purple-400 transition-all"
-                     >
-                       {t.intelligenceBrowseBtn}
-                     </button>
-                   </div>
+                    <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-900/50 w-full" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+                      <table className="w-full text-left text-[11px]">
+                        <thead className="bg-slate-800/80 text-slate-400 uppercase tracking-widest border-b border-slate-700">
+                          <tr>
+                            <th className="px-4 py-3">{lang === 'ar' ? 'معرف الخطر' : 'Risk ID'}</th>
+                            <th className="px-4 py-3">{lang === 'ar' ? 'الأصل / التهديد' : 'Asset / Threat'}</th>
+                            <th className="px-4 py-3 text-right">{lang === 'ar' ? 'تحليل ذكي' : 'Analysis'}</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800">
+                          {riskRegister.map((r, i) => (
+                            <tr key={r.id || i}
+                              onClick={() => {
+                                editRisk(i);
+                                if (!r.rca || !r.rca.primaryRootCause) {
+                                  generateAdvancedInsights(r);
+                                }
+                              }}
+                              className="hover:bg-purple-900/10 hover:border-purple-500/30 transition-all cursor-pointer group"
+                            >
+                              <td className="px-4 py-3 font-mono text-slate-500">{r.id?.split('-').pop()}</td>
+                              <td className="px-4 py-3">
+                                <div className="text-white font-medium">{(lang === 'ar' && r.asset_ar) ? r.asset_ar : r.asset}</div>
+                                <div className="text-slate-500 text-[9px] mt-0.5">{(lang === 'ar' && r.threat_ar) ? r.threat_ar : r.threat}</div>
+                              </td>
+                              <td className="px-4 py-3 text-right">
+                                <span className={`px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-widest ${r.rca?.primaryRootCause ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-purple-500 text-slate-950 hover:bg-purple-400 group-hover:shadow-[0_0_10px_rgba(168,85,247,0.4)] transition-all'}`}>
+                                  {r.rca?.primaryRootCause ? (lang === 'ar' ? 'عرض التحليل' : 'View Data') : (lang === 'ar' ? 'توليد ذكاء' : 'Run AI')}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                          {riskRegister.length === 0 && <tr><td colSpan={3} className="px-4 py-8 text-center text-slate-500 italic">No risks available. Add a risk first!</td></tr>}
+                        </tbody>
+                      </table>
+                    </div>
                  )}
               </div>
             </div>

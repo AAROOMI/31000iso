@@ -12,15 +12,7 @@ interface KRIProps {
 
 export const KRITrendChart: React.FC<KRIProps> = ({ data, lang = 'en' }) => {
   const isAr = lang === 'ar';
-  // Fallback data if no history
-  const chartData = data.history?.length ? data.history : [
-    { date: '2024-01', value: 2 },
-    { date: '2024-02', value: 4 },
-    { date: '2024-03', value: 3 },
-    { date: '2024-04', value: 7 },
-    { date: '2024-05', value: 5 },
-    { date: '2024-06', value: 9 },
-  ];
+  const chartData = data?.history?.length ? data.history : [];
 
   return (
     <div className="w-full h-80 bg-slate-900/50 rounded-2xl border border-slate-800 p-6 flex flex-col" dir={isAr ? 'rtl' : 'ltr'}>

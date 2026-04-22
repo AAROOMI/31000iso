@@ -13,8 +13,8 @@ interface IshikawaProps {
 }
 
 export const IshikawaDiagram: React.FC<IshikawaProps> = ({ data }) => {
-  // Support both flat and nested structures for AI compatibility
-  const ishikawa = (data as any).ishikawa || data;
+  // Support both flat and nested structures for AI compatibility, add null checks to prevent crashes
+  const ishikawa = (data as any)?.ishikawa || data || { people: '', process: '', technology: '', environment: '', management: '' };
   
   const categories = [
     { label: 'People', value: ishikawa.people, x: '20%', y: '10%', align: 'start' },
